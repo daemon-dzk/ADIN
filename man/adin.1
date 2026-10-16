@@ -1,0 +1,113 @@
+.TH ADIN 1 "October 2026" "ADIN 0.1.0" "User Commands"
+.SH NAME
+adin \- offline-first cryptographic and encoding inspector
+.SH SYNOPSIS
+.B adin
+.RI [ options ]
+.I input
+.br
+.B adin
+.BR -f " " \fIPATH\fR
+.br
+.I command
+.B | adin -
+.SH DESCRIPTION
+.B ADIN
+(Automated Cryptographic Inspector) is an offline-first command-line tool that inspects strings and byte sequences for common encodings, cryptographic container and token formats, hash-shaped values, binary signatures, and heuristic classical-cipher candidates.
+.PP
+ADIN ranks possible interpretations and presents supporting evidence, confidence, decoded previews where appropriate, alternative matches, and limitations. It does not claim to identify every possible format. Many encodings overlap; ciphertext and random bytes often cannot be uniquely identified by appearance alone.
+.PP
+All analysis runs locally. ADIN does not use an AI model, contact a network, execute input or decoded content, crack password hashes, or decrypt unknown ciphertext.
+.SH OPTIONS
+.TP
+.BR -h , --help
+Show the command-line help and exit.
+.TP
+.B --version
+Show the ADIN version and exit.
+.TP
+.BR -f , --file \fIPATH\fR
+Read exact bytes from the specified file. ADIN does not modify the file.
+.TP
+.B --json
+Print a machine-readable JSON report instead of the normal terminal report.
+.TP
+.B --verbose
+Show all ranked candidates and additional technical information, including evidence, parameters, statistics, and limitations.
+.TP
+.B --depth \fIN\fR
+Set the maximum nested decoding depth from 0 to 10. The default is 3. A value of 0 disables nested decoding.
+.TP
+.B --max-bytes \fIN\fR
+Set the maximum input size in bytes. The default is 1048576 (1 MiB). Values must be positive.
+.SH INPUT
+.I input
+is one literal argument. Quote values that contain spaces or shell metacharacters. Alternatively, use --file to analyze a file, or pass a hyphen (\fB-\fR) to read standard input. If standard input is redirected or piped and no input argument is provided, ADIN reads from standard input.
+.SH INTERPRETING RESULTS
+.TP
+.B Encoding
+Changes how data is represented. Common encodings can often be reversed without a secret key. Encoding is not encryption.
+.TP
+.B Hash candidate
+A digest is generally one-way. Digest length and character set alone rarely prove which algorithm produced it.
+.TP
+.B Encrypted format candidate
+A structural marker may suggest a format used for encrypted data, but does not prove the payload is authentic or decryptable.
+.TP
+.B Confidence
+Indicates how well an input matches a detector's expected pattern. It is not a probability of cryptographic validity.
+.PP
+A high entropy score does not by itself prove that data is encrypted. When formats are ambiguous, inspect the alternatives and limitations or treat the result as inconclusive.
+.SH EXAMPLES
+.TP
+Decode a hexadecimal string:
+.B adin '48656c6c6f'
+.TP
+Inspect Base64 and nested encodings:
+.B adin --verbose 'U0dWc2JHOD0='
+.TP
+Inspect a file:
+.B adin --file ./evidence.bin
+.TP
+Read from a pipeline:
+.B printf '%s' 'SGVsbG8=' | adin -
+.TP
+Produce JSON:
+.B adin --json 'SGVsbG8='
+.TP
+Limit nested decoding:
+.B adin --depth 1 'U0dWc2JHOD0='
+.TP
+Show available options:
+.B adin --help
+.SH EXIT STATUS
+.TP
+.B 0
+Analysis completed successfully.
+.TP
+.B 2
+Invalid command-line arguments or input-selection error.
+.SH FILES
+.TP
+.I ~/.local/bin/adin
+User-local launcher installed by install.sh.
+.TP
+.I ~/.local/share/man/man1/adin.1
+User-local manual page.
+.TP
+.I ~/.local/share/bash-completion/completions/adin
+Bash completion definition.
+.TP
+.I ~/.local/share/zsh/site-functions/_adin
+Zsh completion definition.
+.TP
+.I ~/.config/fish/completions/adin.fish
+Fish completion definition.
+.SH SECURITY NOTES
+Treat analysis output as a clue, not proof. Do not use ADIN's classifications as the sole basis for incident-response conclusions. Never paste sensitive evidence into public issue reports.
+.SH SEE ALSO
+.BR bash (1),
+.BR zsh (1),
+.BR fish (1)
+.SH AUTHORS
+ADIN contributors.

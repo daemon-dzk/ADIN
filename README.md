@@ -52,6 +52,29 @@ To run the test suite in a development environment with pytest installed:
 python -m pytest
 ```
 
+## Shell completion and manual page
+
+The local installer also installs tab completion for Bash, Zsh, and Fish, plus a manual page.
+
+After running `./install.sh`, restart the terminal (or reload your current shell configuration). To see option completions, type a **space after the command** and then press Tab:
+
+```bash
+adin <TAB>        # option and file suggestions
+adin --<TAB>      # options such as --verbose, --json, --file
+adin --depth <TAB> # supported depth values
+```
+
+Pressing Tab immediately after `adin` with **no trailing space** completes the command name itself; shells normally do not offer its arguments until the cursor is in the argument position.
+
+Open the full manual with:
+
+```bash
+man adin
+adin --help
+```
+
+The manual is installed to `~/.local/share/man/man1/adin.1`. If your system's man search path does not include that directory, use `man -M "$HOME/.local/share/man" adin`. The installer adds the local manual path and completion setup to Bash/Zsh configuration files once, without replacing existing files.
+
 ## Usage
 
 ```bash
@@ -174,3 +197,40 @@ New detectors should include positive tests, negative tests, malformed-input tes
 MIT. See [LICENSE](LICENSE).
 
 See [SECURITY.md](SECURITY.md) for safe-use boundaries and security assumptions.
+
+## Human-readable terminal summary
+
+The default terminal view starts with the best-supported interpretation, shows the category and confidence, displays a bounded decoded preview when available, explains whether the result is encryption, and lists alternative matches separately. Low-confidence alternatives include a caution to reduce false certainty. Use `--verbose` for technical statistics, detector evidence, parameters, limitations, and all candidate matches. Use `--json` for machine-readable output.
+
+Example:
+
+```console
+$ adin '48656c6c6f'
+╭────────────────────────────────────────────────╮
+│                 ADIN ANALYSIS                  │
+╰────────────────────────────────────────────────╯
+ADIN v0.1.0 | Offline cryptographic & encoding inspector
+
+INPUT          : 48656c6c6f
+VERDICT        : HEXADECIMAL ENCODING
+CATEGORY       : Data Encoding
+CONFIDENCE     : Very High (96%)
+DECODED        : Hello
+
+WHAT IS IT?
+Hexadecimal represents each byte using two hexadecimal digits.
+
+IS IT ENCRYPTION?
+No. This is an encoding, not encryption; it can be reversed without
+a secret key.
+
+ALTERNATIVE MATCHES
+- Base58 (Bitcoin alphabet): Moderate (72%)
+  Base58 has no universal marker; many identifiers and random
+  strings share this alphabet.
+
+FINAL RESULT
+Type           : HEXADECIMAL ENCODING
+Data           : Hello
+Classification : Encoding, not encryption
+```

@@ -1,0 +1,11 @@
+#compdef adin
+
+_arguments -s \
+  '(-h --help)'{-h,--help}'[show this help message and exit]' \
+  '--version[show version information]' \
+  '(-f --file)'{-f,--file}'[read bytes from a file]:file:_files' \
+  '--json[print a machine-readable JSON report]' \
+  '--verbose[show all candidates and technical parameters]' \
+  '--depth[maximum nested decode depth]:depth:(0 1 2 3 4 5 6 7 8 9 10)' \
+  '--max-bytes[maximum input size in bytes]:bytes:(1024 4096 65536 1048576 4194304)' \
+  '*:input:'

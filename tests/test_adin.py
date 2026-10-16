@@ -204,3 +204,83 @@ def test_der_sequence_candidate():
     report = analyze(b"\x30\x03\x02\x01\x05")
     match = next(d for d in report.layers[0].detections if d.name == "ASN.1 DER SEQUENCE candidate")
     assert match.parameters["exact_length_match"] is True
+
+
+def test_terminal_pretty_summary_for_hex_input():
+    report = analyze(b"48656c6c6f")
+    output = render_terminal(report, color=False, input_data=b"48656c6c6f")
+    assert "ADIN ANALYSIS" in output
+    assert "INPUT" in output and "48656c6c6f" in output
+    assert "VERDICT" in output and "HEXADECIMAL ENCODING" in output
+    assert "CATEGORY" in output and "Data Encoding" in output
+    assert "DECODED" in output and "Hello" in output
+    assert "IS IT ENCRYPTION?" in output and "not encryption" in output
+    assert "ALTERNATIVE MATCHES" in output and "Base58" in output
+    assert "FINAL RESULT" in output and "Encoding, not encryption" in output
+
+
+def test_terminal_unknown_input_is_explicit_about_uncertainty():
+    report = analyze(b"Hello")
+    output = render_terminal(report, color=False, input_data=b"Hello")
+    assert "UNKNOWN / NOT IDENTIFIED" in output
+    assert "Inconclusive" in output
+    assert "Cannot determine" in output
+
+
+def test_shell_completion_definitions_include_cli_options():
+    root = Path(__file__).resolve().parents[1]
+    bash_completion = (root / "completions" / "bash" / "adin").read_text(encoding="utf-8")
+    zsh_completion = (root / "completions" / "zsh" / "_adin").read_text(encoding="utf-8")
+    fish_completion = (root / "completions" / "fish" / "adin.fish").read_text(encoding="utf-8")
+    for content in (bash_completion, zsh_completion):
+        assert "--verbose" in content
+        assert "--json" in content
+        assert "--file" in content
+        assert "--depth" in content
+        assert "--max-bytes" in content
+    for option in ("verbose", "json", "file", "depth", "max-bytes"):
+        assert f"-l {option}" in fish_completion
+
+
+def test_manual_page_documents_core_usage():
+    root = Path(__file__).resolve().parents[1]
+    manual = (root / "man" / "adin.1").read_text(encoding="utf-8")
+    assert ".TH ADIN 1" in manual
+    assert "--verbose" in manual
+    assert "--json" in manual
+    assert "--file" in manual
+    assert "Confidence" in manual
+
+
+def test_installer_installs_shell_completions_and_manual(tmp_path):
+    root = Path(__file__).resolve().parents[1]
+    home = tmp_path / "home"
+    home.mkdir()
+    import os
+    env = os.environ.copy()
+    env["HOME"] = str(home)
+    proc = subprocess.run([str(root / "install.sh")], capture_output=True, text=True, env=env)
+    assert proc.returncode == 0, proc.stderr
+    assert (home / ".local/share/man/man1/adin.1").is_file()
+    assert (home / ".local/share/bash-completion/completions/adin").is_file()
+    assert (home / ".local/share/zsh/site-functions/_adin").is_file()
+    assert (home / ".config/fish/completions/adin.fish").is_file()
+    assert "ADIN shell integration" in (home / ".bashrc").read_text(encoding="utf-8")
+    zshrc = (home / ".zshrc").read_text(encoding="utf-8")
+    assert "ADIN shell integration" in zshrc
+    assert "compinit" in zshrc
+
+
+def test_installer_shell_integration_is_idempotent(tmp_path):
+    root = Path(__file__).resolve().parents[1]
+    home = tmp_path / "home"
+    home.mkdir()
+    import os
+    env = os.environ.copy()
+    env["HOME"] = str(home)
+    for _ in range(2):
+        proc = subprocess.run([str(root / "install.sh")], capture_output=True, text=True, env=env)
+        assert proc.returncode == 0, proc.stderr
+    for rc_name in (".bashrc", ".zshrc"):
+        rc_text = (home / rc_name).read_text(encoding="utf-8")
+        assert rc_text.count("# >>> ADIN shell integration >>>") == 1
