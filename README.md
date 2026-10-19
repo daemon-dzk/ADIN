@@ -19,7 +19,7 @@
 - Python 3.10 or newer
 - No third-party runtime dependencies
 
-## Install on Fedora / Linux (no downloads required)
+## Install
 
 The project has no third-party runtime dependencies. For a fully local install, unpack the source archive and run:
 
